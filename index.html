@@ -151,6 +151,7 @@ svg{display:block}
 .mapwrap{position:relative;overflow:hidden;flex:1 1 auto;min-height:0;touch-action:none}
 #mapinner{position:absolute;top:0;left:0;right:0;bottom:0;transform-origin:0 0;transform:translate3d(0,0,0) scale(1);will-change:transform}
 #mapinner svg{width:100%;height:100%}
+.mapimg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;-webkit-user-drag:none;user-select:none;pointer-events:none}
 .route{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
 .pinwrap{pointer-events:none}
 .pinbob{animation:bob 1.8s ease-in-out infinite}
@@ -712,7 +713,7 @@ body{max-width:500px;margin-inline:auto;box-shadow:0 0 60px rgba(0,0,0,.45)}
 
   <section class="screen" id="s-map">
     <div class="mapwrap st1" id="mapwrap">
-      <div id="mapinner"><svg id="mapsvg" viewBox="0 0 749 453" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"><path d="M294.724 24.0537L0 192.058L291.025 379.878L321.794 361.288L485.896 452.313L748.074 262.57L619.229 151.032L294.724 24.0537Z" fill="#6C6C6C"/>
+      <div id="mapinner"><img id="mapimg" class="mapimg" alt="Карта маршрута доставки" style="display:none"><svg id="mapsvg" viewBox="0 0 749 453" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"><path d="M294.724 24.0537L0 192.058L291.025 379.878L321.794 361.288L485.896 452.313L748.074 262.57L619.229 151.032L294.724 24.0537Z" fill="#6C6C6C"/>
 <path d="M391.016 59.1871L322.005 29.8613L313.251 35.4055L385.618 72.6098L391.016 59.1871Z" fill="#00FB68" stroke="black" stroke-width="0.3"/>
 <ellipse cx="491.491" cy="404.47" rx="8.87384" ry="4.7232" fill="#00FB68" stroke="black" stroke-width="0.3"/>
 <ellipse cx="513.189" cy="392.099" rx="8.87384" ry="4.7232" fill="#00FB68" stroke="black" stroke-width="0.3"/>
@@ -2173,9 +2174,10 @@ body{max-width:500px;margin-inline:auto;box-shadow:0 0 60px rgba(0,0,0,.45)}
   function scen(k){ return SCN[((DEVICE_ID-1) + (k===undefined?S.order:k)*8) % SCN.length]; }
   function scenNo(k){ return ((DEVICE_ID-1) + (k===undefined?S.order:k)*8) + 1; }
   function destName(sc){
-    /* Для ЦДМ заменяем "Туризм" на "Пекарня" (по xlsx-договорённости) */
-    if(sc.dest.note && S.store === 'cdm' && sc.dest.name === 'Туризм'){ return 'Пекарня'; }
-    return sc.dest.name;
+    var n = sc.dest.name, st = S.store;
+    if(n === 'Туризм'){ if(st === 'cdm') return 'Пекарня'; if(st === 'raduga') return 'Лаборатория вкусов'; }
+    if(n === 'Почта' && st === 'cdm') return 'Редакция';
+    return n;
   }
   function orderNum(k){ return '12387' + DEVICE_ID + '699' + ((k===undefined?S.order:k) + 1); }
   function cartTotal(k){
@@ -2309,13 +2311,26 @@ body{max-width:500px;margin-inline:auto;box-shadow:0 0 60px rgba(0,0,0,.45)}
     $('#ho-who').textContent = 'Кому: ' + sc.dest.who;
   }
 
+  var MAPSET = {"grand": ["bank", "farm", "fashion", "hospital", "police", "post", "rescue", "tourism"], "zelpark": ["bank", "farm", "fashion", "hospital", "police", "post", "rescue", "tourism"], "mega-nn": ["bank", "farm", "fashion", "hospital", "police", "post", "rescue", "tourism"], "mega-nsk": ["bank", "farm", "fashion", "hospital", "police", "post", "rescue", "tourism"], "raduga": ["farm", "fashion", "hospital", "police", "post", "rescue", "tourism"], "cdm": ["bank", "farm", "fashion", "hospital", "police", "post", "tourism"]};
+  var PTK = {'Банк':'bank','Полиция':'police','Ферма':'farm','Служба спасения':'rescue','Почта':'post','Больница / Поликлиника':'hospital','Дом мод / Ателье':'fashion','Туризм':'tourism'};
   function renderMap(){
     var sc = scen();
     $('#mp-dest').textContent = destName(sc);
-    var PINS = [[374,150],[205,250],[545,212],[488,372]];
-    var pp = PINS[S.order % PINS.length];
-    var pin = document.getElementById('pin');
-    if(pin) pin.setAttribute('transform', 'translate(' + pp[0] + ' ' + pp[1] + ')');
+    var pk = PTK[sc.dest.name], st = S.store;
+    var img = document.getElementById('mapimg'), gsvg = document.getElementById('mapsvg');
+    var has = st && MAPSET[st] && MAPSET[st].indexOf(pk) !== -1;
+    if(has && img){
+      img.onerror = function(){ img.style.display='none'; if(gsvg) gsvg.style.display=''; };
+      img.src = 'assets/maps/' + st + '/' + pk + '.svg';
+      img.style.display=''; if(gsvg) gsvg.style.display='none';
+    } else {
+      if(img) img.style.display='none';
+      if(gsvg) gsvg.style.display='';
+      var PINS = [[374,150],[205,250],[545,212],[488,372]];
+      var pp = PINS[S.order % PINS.length];
+      var pin = document.getElementById('pin');
+      if(pin) pin.setAttribute('transform', 'translate(' + pp[0] + ' ' + pp[1] + ')');
+    }
     zReset();
   }
 
