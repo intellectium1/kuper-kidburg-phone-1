@@ -1,0 +1,11 @@
+{
+  "appId": "ru.kuper.kidburg",
+  "appName": "Kuper Kidburg",
+  "webDir": "www",
+  "android": {
+    "allowMixedContent": true
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

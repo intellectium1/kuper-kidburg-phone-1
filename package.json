@@ -1,0 +1,13 @@
+{
+  "name": "kuper-kidburg-phone1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kuper x Kidburg — courier delivery prototype (phone 1), packaged as an Android app via Capacitor.",
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  }
+}
