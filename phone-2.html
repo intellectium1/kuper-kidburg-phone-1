@@ -104,7 +104,7 @@ svg{display:block}
   transition:background .18s ease,box-shadow .18s ease;
   cursor:pointer;
 }
-.pname{flex:0 0 auto;align-self:flex-end;text-align:right;font-family:var(--font-head);font-size:13px;font-weight:700;line-height:1.14;letter-spacing:-.01em;max-width:86%;hyphens:auto;-webkit-hyphens:auto;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;z-index:2}
+.pname{flex:0 0 auto;align-self:flex-end;text-align:right;font-family:var(--font-head);font-size:13px;font-weight:700;line-height:1.14;letter-spacing:-.01em;max-width:92%;hyphens:manual;-webkit-hyphens:manual;overflow-wrap:break-word;word-break:normal;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;z-index:2}
 .pname small{display:block;font-size:11px;font-weight:500;margin-top:1px;opacity:.78}
 .pbody{flex:1 1 auto;min-height:0;position:relative;margin:4px 0 2px}
 .pimg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
@@ -194,6 +194,7 @@ svg{display:block}
 .finrow .t small{display:block;font-size:11.5px;font-weight:700;opacity:.6;margin-top:2px}
 .finrow .rr{font-size:12px;font-weight:900;letter-spacing:.06em;padding:7px 10px;border-radius:99px;border:1px solid var(--ink);background:var(--yellow);text-transform:uppercase}
 .finrow .rr.best{background:var(--green)}
+.finrow .rr.bad{background:#FF3B30;color:#fff}
 .staffhint{position:relative;overflow:hidden;text-align:center;border:1px dashed var(--ink);border-radius:9px;padding:13px 12px;margin:0 21px;font-size:10.5px;font-weight:700;letter-spacing:.1em;opacity:.8}
 .staffhint .hp{background:var(--orange)}
 .cf{position:fixed;top:-14px;width:9px;height:15px;border-radius:2px;z-index:99;pointer-events:none;animation:fall linear forwards;display:block}
@@ -2372,6 +2373,10 @@ body{max-width:500px;margin-inline:auto;box-shadow:0 0 60px rgba(0,0,0,.45)}
     var sc = scen();
     $('#mp-dest').textContent = destName(sc);
     var pk = PTK[sc.dest.name], st = S.store;
+    /* Некоторые города не имеют карты нужной точки (Радуга без «Банка», ЦДМ без «Службы спасения»).
+       Подменяем на близкую карту ТОГО ЖЕ города, чтобы всегда показывался правильный город, а не generic. */
+    var MAPSUB = {raduga:{bank:'post'}, cdm:{rescue:'police'}};
+    if(st && MAPSUB[st] && MAPSUB[st][pk] && !(MAPSET[st] && MAPSET[st].indexOf(pk) !== -1)){ pk = MAPSUB[st][pk]; }
     var img = document.getElementById('mapimg'), gsvg = document.getElementById('mapsvg');
     var has = st && MAPSET[st] && MAPSET[st].indexOf(pk) !== -1;
     if(has && img){
@@ -2421,7 +2426,7 @@ body{max-width:500px;margin-inline:auto;box-shadow:0 0 60px rgba(0,0,0,.45)}
       row.className = 'finrow';
       row.innerHTML = '<div class="n">0' + (k+1) + '</div>' +
         '<div class="t">' + destName(sc) + '<small>' + sc.title + ' · №' + orderNum(k) + '</small></div>' +
-        '<div class="rr' + (r === 'Отлично' ? ' best' : '') + '">' + r + '</div>';
+        '<div class="rr' + (r === 'Отлично' ? ' best' : (r === 'Плохо' ? ' bad' : '')) + '">' + r + '</div>';
       list.appendChild(row);
     }
     confetti();
