@@ -2380,8 +2380,19 @@ body{max-width:500px;margin-inline:auto;box-shadow:0 0 60px rgba(0,0,0,.45)}
     var img = document.getElementById('mapimg'), gsvg = document.getElementById('mapsvg');
     var has = st && MAPSET[st] && MAPSET[st].indexOf(pk) !== -1;
     if(has && img){
-      img.onerror = function(){ img.style.display='none'; if(gsvg) gsvg.style.display=''; };
-      img.src = (window.MAPB64 && MAPB64[st] && MAPB64[st][pk]) ? MAPB64[st][pk] : ('assets/maps/' + st + '/' + pk + '.webp');
+      var genericFallback = function(){ img.style.display='none'; if(gsvg) gsvg.style.display=''; };
+      if(window.MAPSVG && MAPSVG[st] && MAPSVG[st][pk]){
+        /* inline-вектор: Blob из сырого SVG (без base64-раздувания), чётко на любом зуме */
+        if(window.__mapURL){ try{ URL.revokeObjectURL(window.__mapURL); }catch(e){} }
+        window.__mapURL = URL.createObjectURL(new Blob([MAPSVG[st][pk]], {type:'image/svg+xml'}));
+        img.onerror = genericFallback; img.src = window.__mapURL;
+      } else if(window.MAPB64 && MAPB64[st] && MAPB64[st][pk]){
+        img.onerror = genericFallback; img.src = MAPB64[st][pk];
+      } else {
+        /* внешние ассеты: сначала .svg (вектор), при ошибке .webp, затем generic */
+        img.onerror = function(){ img.onerror = genericFallback; img.src = 'assets/maps/' + st + '/' + pk + '.webp'; };
+        img.src = 'assets/maps/' + st + '/' + pk + '.svg';
+      }
       img.style.display=''; if(gsvg) gsvg.style.display='none';
     } else {
       if(img) img.style.display='none';
