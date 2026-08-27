@@ -2222,8 +2222,11 @@ body{max-width:500px;margin-inline:auto;box-shadow:0 0 60px rgba(0,0,0,.45)}
   function scenNo(k){ return ((DEVICE_ID-1) + (k===undefined?S.order:k)*8) + 1; }
   function destName(sc){
     var n = sc.dest.name, st = S.store;
-    if(n === 'Туризм'){ if(st === 'cdm') return 'Пекарня'; if(st === 'raduga') return 'Лаборатория вкусов'; }
-    if(n === 'Почта' && st === 'cdm') return 'Редакция';
+    if(st === 'cdm'){
+      if(n === 'Туризм') return 'Пекарня';
+      if(n === 'Почта')  return 'Редакция';
+    }
+    if(st === 'raduga' && n === 'Банк') return 'Лаборатория вкусов';
     return n;
   }
   function orderNum(k){ return '12387' + DEVICE_ID + '699' + ((k===undefined?S.order:k) + 1); }
@@ -2367,16 +2370,14 @@ body{max-width:500px;margin-inline:auto;box-shadow:0 0 60px rgba(0,0,0,.45)}
     $('#ho-who').textContent = 'Кому: ' + sc.dest.who;
   }
 
-  var MAPSET = {"grand": ["bank", "farm", "fashion", "hospital", "police", "post", "rescue", "tourism"], "zelpark": ["bank", "farm", "fashion", "hospital", "police", "post", "rescue", "tourism"], "mega-nn": ["bank", "farm", "fashion", "hospital", "police", "post", "rescue", "tourism"], "mega-nsk": ["bank", "farm", "fashion", "hospital", "police", "post", "rescue", "tourism"], "raduga": ["farm", "fashion", "hospital", "police", "post", "rescue", "tourism"], "cdm": ["bank", "farm", "fashion", "hospital", "police", "post", "tourism"]};
+  var MAPSET = {"grand": ["bank","farm","fashion","hospital","police","post","rescue","tourism"], "zelpark": ["bank","farm","fashion","hospital","police","post","rescue","tourism"], "mega-nn": ["bank","farm","fashion","hospital","police","post","rescue","tourism"], "mega-nsk": ["bank","farm","fashion","hospital","police","post","rescue","tourism"], "raduga": ["farm","fashion","hospital","police","post","rescue","tourism","lab"], "cdm": ["bank","farm","fashion","hospital","police","post","rescue","bakery"]};
   var PTK = {'Банк':'bank','Полиция':'police','Ферма':'farm','Служба спасения':'rescue','Почта':'post','Больница / Поликлиника':'hospital','Дом мод / Ателье':'fashion','Туризм':'tourism'};
+  /* store-aware map key: у Радуги слот «Банк» = Лаборатория вкусов, у ЦДМ слот «Туризм» = Пекарня */
+  function mapKey(dn, st){ var pk = PTK[dn]; if(st === 'raduga' && pk === 'bank') return 'lab'; if(st === 'cdm' && pk === 'tourism') return 'bakery'; return pk; }
   function renderMap(){
     var sc = scen();
     $('#mp-dest').textContent = destName(sc);
-    var pk = PTK[sc.dest.name], st = S.store;
-    /* Некоторые города не имеют карты нужной точки (Радуга без «Банка», ЦДМ без «Службы спасения»).
-       Подменяем на близкую карту ТОГО ЖЕ города, чтобы всегда показывался правильный город, а не generic. */
-    var MAPSUB = {raduga:{bank:'post'}, cdm:{rescue:'police'}};
-    if(st && MAPSUB[st] && MAPSUB[st][pk] && !(MAPSET[st] && MAPSET[st].indexOf(pk) !== -1)){ pk = MAPSUB[st][pk]; }
+    var st = S.store, pk = mapKey(sc.dest.name, st);
     var img = document.getElementById('mapimg'), gsvg = document.getElementById('mapsvg');
     var has = st && MAPSET[st] && MAPSET[st].indexOf(pk) !== -1;
     if(has && img){
